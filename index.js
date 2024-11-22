@@ -40,8 +40,7 @@ app.use(
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: true, // Ativa cookies seguros apenas em produção
-            httpOnly: true, // Protege contra ataques XSS
+            secure: false, // Ativa cookies seguros apenas em produção
             maxAge: 1000 * 60 * 60 * 24, // 1 dia
         },
     })
@@ -51,6 +50,7 @@ app.use((req, res, next) => {
     console.log("Sessão atual:", req.session);
     next();
 });
+
 // Rotas
 app.post("/register", (req, res) => {
     try {

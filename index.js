@@ -33,10 +33,11 @@ app.use(
         resave: true, // Garante que a sessão seja salva mesmo sem alterações
         saveUninitialized: false,
         cookie: {
-            secure: process.env.NODE_ENV === "production", // Ativa cookies seguros apenas em produção
+            secure: false, 
             httpOnly: true, // Protege contra ataques XSS
             maxAge: 1000 * 60 * 60 * 24, // 1 dia
         },
+        email: ''
     })
 );
 app.use(

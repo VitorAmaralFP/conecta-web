@@ -13,7 +13,7 @@ const saltRounds = 10;
 
 // Configuração do Redis
 const redisClient = redis.createClient({
-    url: 'redis-18248.c92.us-east-1-3.ec2.redns.redis-cloud.com:18248',
+    url: 'redis://default:sM73DfoMvdy41lTfRx78u26oMXTV2DX3@redis-18248.c92.us-east-1-3.ec2.redns.redis-cloud.com:18248',
     legacyMode: true, 
 });
 

@@ -3,43 +3,38 @@ const cors = require("cors");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const mysql = require("mysql");
 const bcrypt = require("bcrypt");
+const MySQLStore = require("express-mysql-session")(session);
 
 const app = express();
 const saltRounds = 10;
 
-// Configuração do banco de dados MySQL
-const db = mysql.createPool({
+const sessionStore = new MySQLStore({
     host: process.env.DB_HOST,
+    port: 3306,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    connectTimeout: 30000,
-    ssl: {
-        rejectUnauthorized: false,
-    },
 });
+
+app.use(
+    session({
+        secret: "secret", // Alterar para algo seguro em produção
+        resave: false, // Não salva sessão se não modificada
+        saveUninitialized: false, // Não salva sessões vazias
+        store: sessionStore, // Configuração de persistência
+        cookie: {
+            secure: process.env.NODE_ENV === "production", // Cookies seguros apenas em produção
+            httpOnly: true, // Proteção contra XSS
+            maxAge: 1000 * 60 * 60 * 24, // 1 dia
+        },
+    })
+);
 
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(
-    session({
-        secret: "secret", // Alterar para um valor seguro em produção
-        resave: true, // Garante que a sessão seja salva mesmo sem alterações
-        saveUninitialized: false,
-        cookie: {
-            secure: false, 
-            httpOnly: true, // Protege contra ataques XSS
-            maxAge: 1000 * 60 * 60 * 24, // 1 dia
-        },
-        email: ''
-    })
-);
 app.use(
     cors({
         origin: ["https://elaborate-sopapillas-067537.netlify.app"],
@@ -105,7 +100,7 @@ app.post("/login", (req, res) => {
                             console.error("Erro ao salvar sessão:", err);
                             return res.status(500).json({ message: "Erro ao salvar sessão" });
                         }
-                        console.log("Sessão salva com sucesso:", req.session);
+                        console.log("Sessão salva com sucesso após login:", req.session);
                         return res.status(200).json({ message: "Logado com sucesso", login: true });
                     });
                 } else {

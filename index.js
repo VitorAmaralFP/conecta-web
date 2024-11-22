@@ -36,17 +36,21 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
     session({
-        secret: "secret", // Alterar para algo seguro em produção
+        secret: "secret", // Alterar para um valor seguro em produção
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: false, // Cookies seguros apenas em produção
-            httpOnly: true, // Protege contra XSS
+            secure: true, // Ativa cookies seguros apenas em produção
+            httpOnly: true, // Protege contra ataques XSS
             maxAge: 1000 * 60 * 60 * 24, // 1 dia
         },
     })
 );
 
+app.use((req, res, next) => {
+    console.log("Sessão atual:", req.session);
+    next();
+});
 // Rotas
 app.post("/register", (req, res) => {
     try {
@@ -92,12 +96,13 @@ app.post("/login", (req, res) => {
                     return res.status(500).json({ message: "Erro no servidor" });
                 }
                 if (hashed) {
-                    req.session.email = result[0].email; // Armazena na sessão
+                    req.session.email = result[0].email; // Armazena o email na sessão
                     req.session.save((err) => {
                         if (err) {
                             console.error("Erro ao salvar sessão:", err);
                             return res.status(500).json({ message: "Erro ao salvar sessão" });
                         }
+                        console.log("Sessão salva com sucesso:", req.session);
                         return res.status(200).json({ message: "Logado com sucesso", login: true });
                     });
                 } else {

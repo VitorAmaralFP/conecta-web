@@ -1,31 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const session = require("express-session");
-const RedisStore = require("connect-redis")(session); // Adiciona Redis ao express-session
+const session = require("express-session"); // Removendo Redis
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const mysql = require("mysql");
 const bcrypt = require("bcrypt");
-const redis = require("redis"); // Importa o cliente Redis
 
 const app = express();
 const saltRounds = 10;
-
-const redisClient = redis.createClient({
-    url: process.env.REDIS_URL, // Certifique-se de que esta variável está configurada
-    legacyMode: true,
-});
-redisClient.connect().catch(console.error);
-
-redisClient.connect().catch(console.error); // Conecta ao Redis
-
-redisClient.on("connect", () => {
-    console.log("Conectado ao Redis com sucesso!");
-});
-
-redisClient.on("error", (err) => {
-    console.error("Erro ao conectar ao Redis:", err);
-});
 
 // Configuração do banco de dados MySQL
 const db = mysql.createPool({
@@ -34,10 +16,10 @@ const db = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     waitForConnections: true,
-    connectionLimit: 10, // Número máximo de conexões no pool
-    connectTimeout: 30000, // Aumenta o tempo limite para 30 segundos
+    connectionLimit: 10,
+    connectTimeout: 30000,
     ssl: {
-        rejectUnauthorized: false, // Necessário para bancos que exigem SSL (como Azure)
+        rejectUnauthorized: false,
     },
 });
 
@@ -54,13 +36,12 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
     session({
-        store: new RedisStore({ client: redisClient }), // Armazena sessões no Redis
-        secret: "secret", // Alterar para um valor seguro em produção
+        secret: "secret", // Alterar para algo seguro em produção
         resave: false,
         saveUninitialized: false,
         cookie: {
             secure: false, // Cookies seguros apenas em produção
-            httpOnly: true, // Protege contra XSS1
+            httpOnly: true, // Protege contra XSS
             maxAge: 1000 * 60 * 60 * 24, // 1 dia
         },
     })

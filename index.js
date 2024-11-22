@@ -5,8 +5,8 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const mysql = require("mysql");
 const app = express();
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const saltRounds = 10;
 
 const db = mysql.createPool({
@@ -40,7 +40,20 @@ app.use(session({
     }
 }))
 
-app.post("/register", (req, res) => {
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) return res.status(401).json({ message: "Token não fornecido" });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ message: "Token inválido" });
+        req.user = user;
+        next();
+    });
+};
+
+app.post("/register", authenticateToken, (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -68,7 +81,7 @@ app.post("/register", (req, res) => {
     }
 })
 
-app.post("/register-company", async (req, res) => {
+app.post("/register-company", authenticateToken, async (req, res) => {
     const { name, contact, address, cnpj, area, email, ods } = req.body;
 
     try {
@@ -137,7 +150,7 @@ app.post("/register-company", async (req, res) => {
 });
 
 
-app.post("/login", (req, res) => {
+app.post("/login", authenticateToken, (req, res) => {
     const { email, password } = req.body;
 
     db.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
@@ -167,7 +180,7 @@ app.post("/login", (req, res) => {
     });
 });
 
-app.get('/', (req, res) => {
+app.get('/', authenticateToken, (req, res) => {
     if (req.session.email) {
         return res.json({ valid: true, email: req.session.email })
     } else {
@@ -175,7 +188,7 @@ app.get('/', (req, res) => {
     }
 })
 
-app.get('/list-companies', (req, res) => {
+app.get('/list-companies', authenticateToken, (req, res) => {
     try {
         const query = `
             SELECT 

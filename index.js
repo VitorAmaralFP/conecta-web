@@ -23,7 +23,7 @@ const db = mysql.createPool({
     },
 });
 
-app.set("trust proxy", 1);
+app.set("trust proxy");
 
 // Middlewares
 app.use(express.json());
@@ -35,8 +35,7 @@ app.use(
         resave: true, // Garante que a sessão seja salva mesmo sem alterações
         saveUninitialized: false,
         cookie: {
-            secure: false,
-            httpOnly: true, // Protege contra ataques XSS
+            secure: true,
             maxAge: 1000 * 60 * 60 * 24, // 1 dia
             sameSite: 'none'
         },

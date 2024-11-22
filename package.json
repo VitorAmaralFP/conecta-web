@@ -4,12 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server/index.js",
-    "devStart": "nodemon server/index.js",
-    "test": "echo \"No tests configured\"",
-    "build": "npm run clean && npm run copy-files",
-    "clean": "rm -rf dist",
-    "copy-files": "mkdir dist && cp -r server dist/ && cp package.json dist/ && cp package-lock.json dist/"
+    "start": "node index.js",
+    "devStart": "nodemon index.js",
+    "test": "echo \"No tests configured\""
   },
   "keywords": [],
   "author": "",
@@ -25,6 +22,6 @@
     "nodemon": "^3.1.7"
   },
   "engines": {
-  "node": "18.x"
-}
+    "node": "18.x"
+  }
 }

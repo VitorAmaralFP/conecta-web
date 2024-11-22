@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const session = require("express-session"); // Removendo Redis
+const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const mysql = require("mysql");
@@ -25,27 +25,29 @@ const db = mysql.createPool({
 
 // Middlewares
 app.use(express.json());
-app.use(
-    cors({
-        origin: ["https://elaborate-sopapillas-067537.netlify.app"],
-        methods: ["POST", "GET", "PUT"],
-        credentials: true,
-    })
-);
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
     session({
         secret: "secret", // Alterar para um valor seguro em produção
-        resave: false,
+        resave: true, // Garante que a sessão seja salva mesmo sem alterações
         saveUninitialized: false,
         cookie: {
-            secure: false, // Ativa cookies seguros apenas em produção
+            secure: process.env.NODE_ENV === "production", // Ativa cookies seguros apenas em produção
+            httpOnly: true, // Protege contra ataques XSS
             maxAge: 1000 * 60 * 60 * 24, // 1 dia
         },
     })
 );
+app.use(
+    cors({
+        origin: ["https://elaborate-sopapillas-067537.netlify.app"],
+        methods: ["POST", "GET", "PUT"],
+        credentials: true, // Garante o envio de cookies
+    })
+);
 
+// Log para depuração de sessão
 app.use((req, res, next) => {
     console.log("Sessão atual:", req.session);
     next();
@@ -116,6 +118,7 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/", (req, res) => {
+    console.log("Verificando sessão no endpoint '/':", req.session);
     if (req.session.email) {
         return res.json({ valid: true, email: req.session.email });
     } else {
@@ -158,70 +161,4 @@ app.get("/list-companies", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
-});
-
-// Configuração do banco de dados
-db.getConnection((err, con) => {
-    if (err) {
-        console.error("Erro ao conectar ao banco de dados:", err);
-        return;
-    }
-
-    console.log("Conexão com o banco de dados estabelecida!");
-
-    const sqlUsers = `
-        CREATE TABLE IF NOT EXISTS users (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            email VARCHAR(50) NOT NULL,
-            password VARCHAR(1000) NOT NULL
-        );
-    `;
-
-    const sqlStg = `
-        CREATE TABLE IF NOT EXISTS stg (
-            stg_id INT PRIMARY KEY AUTO_INCREMENT,
-            name VARCHAR(100) NOT NULL,
-            companies_quantity INT
-        );
-    `;
-
-    const sqlCompanies = `
-        CREATE TABLE IF NOT EXISTS companies (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            cnpj VARCHAR(50) UNIQUE NOT NULL,
-            name VARCHAR(100) NOT NULL,
-            contact VARCHAR(50) NOT NULL,
-            adress VARCHAR(100) NOT NULL,
-            company_sector VARCHAR(50) NOT NULL,
-            is_partner INT NOT NULL DEFAULT 0,
-            stg_id INT,
-            user_id INT,
-            FOREIGN KEY (stg_id) REFERENCES stg(stg_id),
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-    `;
-
-    con.query(sqlUsers, (err) => {
-        if (err) {
-            console.error("Erro ao criar tabela 'users':", err);
-        } else {
-            console.log("Tabela 'users' criada com sucesso.");
-        }
-    });
-
-    con.query(sqlStg, (err) => {
-        if (err) {
-            console.error("Erro ao criar tabela 'stg':", err);
-        } else {
-            console.log("Tabela 'stg' criada com sucesso.");
-        }
-    });
-
-    con.query(sqlCompanies, (err) => {
-        if (err) {
-            console.error("Erro ao criar tabela 'companies':", err);
-        } else {
-            console.log("Tabela 'companies' criada com sucesso.");
-        }
-    });
 });

@@ -80,7 +80,7 @@ app.post("/register-company", async (req, res) => {
                 return res.status(400).json({ message: "Usuário não encontrado." });
             }
 
-            const userId = userResult[0].id;
+            const userId = '1';
 
             const stgQuery = "SELECT stg_id FROM stg WHERE name = ?";
             db.query(stgQuery, [ods], (stgErr, stgResult) => {

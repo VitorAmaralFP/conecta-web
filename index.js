@@ -9,15 +9,16 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
 const db = mysql.createPool({
-    host: process.env.DB_HOST || "localhost",
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "test",
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     waitForConnections: true,
-    connectTimeout: 70000,
+    connectionLimit: 10, // Número máximo de conexões no pool
+    connectTimeout: 30000, // Aumenta o tempo limite para 30 segundos
     ssl: {
-        rejectUnauthorized: false
-    }
+        rejectUnauthorized: false, // Necessário para bancos que exigem SSL (como Azure)
+    },
 });
 
 app.use(express.json())

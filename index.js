@@ -3,11 +3,27 @@ const cors = require("cors");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+const mysql = require("mysql")
 const bcrypt = require("bcrypt");
 const MySQLStore = require("express-mysql-session")(session);
 
 const app = express();
 const saltRounds = 10;
+
+
+// Configuração do banco de dados MySQL
+const db = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    connectTimeout: 30000,
+    ssl: {
+        rejectUnauthorized: false,
+    },
+});
 
 const sessionStore = new MySQLStore({
     host: process.env.DB_HOST,
@@ -54,14 +70,14 @@ app.post("/register", (req, res) => {
     try {
         const { email, password } = req.body;
 
-        sessionStore.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
+        db.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
             if (err) {
                 return res.status(400).json({ message: "Erro no servidor", error: err });
             }
 
             if (result.length === 0) {
                 bcrypt.hash(password, saltRounds, (err, hash) => {
-                    sessionStore.query("INSERT INTO users (email, password) VALUES (?, ?)", [email, hash], (err, result) => {
+                    db.query("INSERT INTO users (email, password) VALUES (?, ?)", [email, hash], (err, result) => {
                         if (err) {
                             return res.status(400).json({ message: "Erro ao cadastrar usuário", err });
                         }
@@ -82,7 +98,7 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
-    sessionStore.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
+    db.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
         if (err) {
             return res.status(400).json({ message: "Erro no login", error: err });
         }
@@ -143,7 +159,7 @@ app.get("/list-companies", (req, res) => {
         LEFT JOIN users ON companies.user_id = users.id
     `;
 
-    sessionStore.query(query, (err, result) => {
+    db.query(query, (err, result) => {
         if (err) {
             console.error("Erro ao consultar empresas:", err);
             return res.status(500).json({ message: "Erro ao buscar empresas." });

@@ -9,16 +9,15 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
 const db = mysql.createPool({
-    host: "conecta-db.mysql.database.azure.com",
-    user: "conecta",
-    password: "Sendokai123",
-    database: "conecta-mais",
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "test",
     waitForConnections: true,
-
     ssl: {
         rejectUnauthorized: false
     }
-})
+});
 
 app.use(express.json())
 app.use(cors({

@@ -32,7 +32,7 @@ app.use(bodyParser.json());
 app.use(
     session({
         secret: "secret", // Alterar para um valor seguro em produção
-        resave: true, // Garante que a sessão seja salva mesmo sem alterações
+        resave: false, // Garante que a sessão seja salva mesmo sem alterações
         saveUninitialized: false,
         cookie: {
             secure: true,

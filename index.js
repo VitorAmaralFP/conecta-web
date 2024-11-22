@@ -11,11 +11,11 @@ const redis = require("redis"); // Importa o cliente Redis
 const app = express();
 const saltRounds = 10;
 
-// Configuração do Redis
 const redisClient = redis.createClient({
-    url: 'redis://default:sM73DfoMvdy41lTfRx78u26oMXTV2DX3@redis-18248.c92.us-east-1-3.ec2.redns.redis-cloud.com:18248',
-    legacyMode: true, 
+    url: process.env.REDIS_URL, // Certifique-se de que esta variável está configurada
+    legacyMode: true,
 });
+redisClient.connect().catch(console.error);
 
 redisClient.connect().catch(console.error); // Conecta ao Redis
 

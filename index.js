@@ -107,7 +107,14 @@ app.post("/login", (req, res) => {
                             return res.status(500).json({ message: "Erro ao salvar sessão" });
                         }
                         console.log("Sessão salva com sucesso:", req.session);
-                        return res.status(200).json({ message: "Logado com sucesso", login: true });
+
+                        // Geração de um token para o frontend
+                        const token = Buffer.from(result[0].email).toString("base64"); // Token simples para exemplo
+                        return res.status(200).json({
+                            message: "Logado com sucesso",
+                            login: true,
+                            token, // Envia o token para o cliente
+                        });
                     });
                 } else {
                     return res.status(401).json({ message: "Senha incorreta", login: false });

@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "undefined/subscriptions/b048d7ea-27be-4544-89fb-ab330cb06fa4/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/conecta-web",
+    "appService.deploySubpath": "."
+}

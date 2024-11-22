@@ -160,6 +160,7 @@ app.post("/login", (req, res) => {
 })
 
 app.get('/', (req, res) => {
+    res.send('Hello from the backend!');
     if (req.session.email) {
         return res.json({ valid: true, email: req.session.email })
     } else {

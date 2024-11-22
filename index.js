@@ -12,17 +12,12 @@ const db = mysql.createPool({
     host: "conecta-db.mysql.database.azure.com",
     user: "conecta",
     password: "Sendokai123",
-    database: "conecta-mais",
-    waitForConnections: true,
-
-    ssl: {
-        rejectUnauthorized: false
-    }
+    database: "db"
 })
 
 app.use(express.json())
 app.use(cors({
-    origin: ["https://elaborate-sopapillas-067537.netlify.app/"],
+    origin: ["http://localhost:3000"],
     methods: ["POST", "GET", "PUT"],
     credentials: true,
 }))
@@ -80,7 +75,7 @@ app.post("/register-company", async (req, res) => {
                 return res.status(400).json({ message: "Usuário não encontrado." });
             }
 
-            const userId = '1';
+            const userId = userResult[0].id;
 
             const stgQuery = "SELECT stg_id FROM stg WHERE name = ?";
             db.query(stgQuery, [ods], (stgErr, stgResult) => {

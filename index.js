@@ -4,56 +4,39 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const mysql = require("mysql");
-const bcrypt = require("bcrypt");
-
 const app = express();
+const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
-// Configuração do banco de dados MySQL
 const db = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    host: "conecta-db.mysql.database.azure.com",
+    user: "conecta",
+    password: "Sendokai123",
+    database: "conecta-mais",
     waitForConnections: true,
-    connectionLimit: 10,
-    connectTimeout: 30000,
+
     ssl: {
-        rejectUnauthorized: false,
-    },
-});
+        rejectUnauthorized: false
+    }
+})
 
-app.set("trust proxy");
-
-// Middlewares
-app.use(express.json());
-app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(
-    session({
-        secret: "secret", // Alterar para um valor seguro em produção
-        resave: false, // Garante que a sessão seja salva mesmo sem alterações
-        saveUninitialized: false,
-        cookie: {
-            secure: true,
-            maxAge: 1000 * 60 * 60 * 24, // 1 dia
-            sameSite: 'none'
-        },
-    })
-);
-app.use(
-    cors({
-        origin: ["https://elaborate-sopapillas-067537.netlify.app"],
-        methods: ["POST", "GET", "PUT"],
-        credentials: true, // Garante o envio de cookies
-    })
-);
-
-// Log para depuração de sessão
-app.use((req, res, next) => {
-    console.log("Sessão atual:", req.session);
-    next();
-});
+app.use(express.json())
+app.use(cors({
+    origin: ["https://dulcet-axolotl-c1f000.netlify.app/"],
+    methods: ["POST", "GET", "PUT"],
+    credentials: true,
+}))
+app.use(cookieParser())
+app.use(bodyParser.json())
+app.use(session({
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        maxAge: 1000 * 60 * 60 * 24
+    }
+}))
 
 app.post("/register", (req, res) => {
     try {

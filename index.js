@@ -23,7 +23,7 @@ const db = mysql.createPool({
 
 app.use(express.json())
 app.use(cors({
-    origin: ["https://elaborate-sopapillas-067537.netlify.app/"],
+    origin: ["https://elaborate-sopapillas-067537.netlify.app/", '*'],
     methods: ["POST", "GET", "PUT"],
     credentials: true,
 }))

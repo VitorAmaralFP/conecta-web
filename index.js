@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const mysql = require("mysql");
 const app = express();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const saltRounds = 10;
 
 const db = mysql.createPool({
@@ -39,7 +40,20 @@ app.use(session({
     }
 }))
 
-app.post("/register", (req, res) => {
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) return res.status(401).json({ message: "Token não fornecido" });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ message: "Token inválido" });
+        req.user = user;
+        next();
+    });
+};
+
+app.post("/register", authenticateToken, (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -67,7 +81,7 @@ app.post("/register", (req, res) => {
     }
 })
 
-app.post("/register-company", async (req, res) => {
+app.post("/register-company", authenticateToken, async (req, res) => {
     const { name, contact, address, cnpj, area, email, ods } = req.body;
 
     try {
@@ -135,33 +149,38 @@ app.post("/register-company", async (req, res) => {
     }
 });
 
-app.post("/login", (req, res) => {
+
+app.post("/login", authenticateToken, (req, res) => {
     const { email, password } = req.body;
 
     db.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
         if (err) {
-            return res.status(400).json({ message: 'Erro no login' })
+            return res.status(400).json({ message: "Erro no login" });
         }
         if (result.length > 0) {
             bcrypt.compare(password, result[0].password, (err, hashed) => {
                 if (err) {
                     console.error("Erro ao comparar senhas:", err);
-                    return res.status(500).json({ message: 'Erro no servidor' });
+                    return res.status(500).json({ message: "Erro no servidor" });
                 }
                 if (hashed) {
-                    req.session.email = result[0].email;
-                    req.session.save();
-                    return res.status(200).json({ message: "Logado com sucesso", login: true, email: req.session.email })
+                    const token = jwt.sign(
+                        { email: result[0].email, id: result[0].id },
+                        process.env.JWT_SECRET,
+                        { expiresIn: "1d" } // Expira em 1 dia
+                    );
+                    return res.status(200).json({ message: "Logado com sucesso", token });
                 } else {
-                    return res.status(401).json({ message: "Senha incorreta", login: false })
+                    return res.status(401).json({ message: "Senha incorreta" });
                 }
-            })
+            });
+        } else {
+            return res.status(404).json({ message: "Usuário não encontrado" });
         }
-    })
-})
+    });
+});
 
-app.get('/', (req, res) => {
-    res.send('Hello from the backend!');
+app.get('/', authenticateToken, (req, res) => {
     if (req.session.email) {
         return res.json({ valid: true, email: req.session.email })
     } else {
@@ -169,7 +188,7 @@ app.get('/', (req, res) => {
     }
 })
 
-app.get('/list-companies', (req, res) => {
+app.get('/list-companies', authenticateToken, (req, res) => {
     try {
         const query = `
             SELECT 
